@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package  dogker.lintang.monitor_service.pc;
+
+
+option go_package = "lintangbs.org/lintang/template/pb";
+
+
+
+message HelloRequest {
+	string userId =1; 
+}
+message HelloResponse {
+	string res = 1;
+}
+service MonitorService {
+	rpc Hello(HelloRequest) returns (HelloResponse);
+}
+
+
+
+
+
+
