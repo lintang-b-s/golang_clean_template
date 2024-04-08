@@ -3,17 +3,17 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
 	"lintangbs.org/lintang/template/app/di"
 	"lintangbs.org/lintang/template/config"
 	"lintangbs.org/lintang/template/internal/rest/middleware"
 	"lintangbs.org/lintang/template/pkg/httpserver"
-
-	"go.uber.org/zap"
+	"lintangbs.org/lintang/template/pkg/postgres"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,38 +41,28 @@ func main() {
 		log.Fatalf("Config error: %s", err)
 	}
 
-	// HTTP Server
 	handler := gin.New()
-	httpServer := httpserver.New(handler, httpserver.Port("5000"))
+	httpServer := httpserver.New(handler, httpserver.Port("5033"))
 
-	// Router
-	di.InitRouterApi(cfg, handler)
-
-	address := "0.0.0.0:5001"
-	listener, err := net.Listen("tcp", address)
-	if err != nil {
-		zap.L().Fatal("cannot start server: ", zap.Error(err))
-	}
-
-	// GRPC
-	err = di.InitGrpcMonitorApi("http://localhost:9090", listener)
-	if err != nil {
-		zap.L().Fatal("cannot start GRPC  Server", zap.Error(err))
-	}
+	// init app
+	pg := di.InitApp(cfg, handler)
 
 	// Waiting signal
+
 	interrupt := make(chan os.Signal, 1)
+
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	select {
 	case s := <-interrupt:
-		zap.L().Fatal("app - Run - signal: " + s.String())
-	case err = <-httpServer.Notify():
-		zap.L().Fatal(fmt.Errorf("app - Run - httpServer.Notify: %w", err).Error())
+		zap.L().Error("app - Run - signal: " + s.String())
+	case err := <-httpServer.Notify():
+		zap.L().Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err).Error())
 	}
 
 	// Shutdown
 	err = httpServer.Shutdown()
+	postgres.ClosePostgres(pg.Pool)
 	if err != nil {
 		zap.L().Fatal(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err).Error())
 	}

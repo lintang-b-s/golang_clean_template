@@ -27,6 +27,6 @@ func (server *MonitorServerImpl) Hello(
 ) (*pb.HelloResponse, error) {
 	zap.L().Error("asldksadds", zap.Error(errors.New("asdsadas")))
 	return &pb.HelloResponse{
-		Res: "kontol",
+		Res: "asdsad",
 	}, nil
 }
