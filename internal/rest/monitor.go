@@ -40,8 +40,10 @@ type tesResponse struct {
 
 func (m *MonitorHandler) TesDoang(c *gin.Context) {
 	tesResult, err := m.Service.TesDoang(c)
-
-	c.JSON(getStatusCode(err), tesResponse{tesResult.Message})
+	if err != nil {
+		c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+	c.JSON(http.StatusOK, tesResponse{tesResult.Message})
 }
 func getStatusCode(err error) int {
 	if err == nil {
