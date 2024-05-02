@@ -10,12 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"lintangbs.org/lintang/template/app/start"
 	"lintangbs.org/lintang/template/config"
-	"lintangbs.org/lintang/template/pkg/postgres"
 )
 
 // Injectors from wire.go:
 
-func InitApp(cfg *config.Config, handler *gin.Engine) *postgres.Postgres {
-	postgresPostgres := start.InitHTTPandGRPC(cfg, handler)
-	return postgresPostgres
+func InitApp(cfg *config.Config, handler *gin.Engine) *start.InitWireApp {
+	initWireApp := start.InitHTTPandGRPC(cfg, handler)
+	return initWireApp
 }

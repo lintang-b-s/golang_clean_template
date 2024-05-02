@@ -13,6 +13,8 @@ type (
 		HTTP      `yaml:"http"`
 		Postgres  `yaml:"postgres"`
 		LogConfig `yaml:"logger"`
+		RabbitMQ  `yaml:"rabbitmq"`
+		GRPC      `yaml:"grpc"`
 	}
 
 	// App -.
@@ -38,19 +40,23 @@ type (
 		MaxAge     int `json:"max_age" yaml:"max_age"`
 		MaxBackups int `json:"max_backups" yaml:"max_backups"`
 	}
+
+	RabbitMQ struct {
+		RMQAddress string `json:"rabbitmqAddress" yaml:"rmqAddress" env:"RABBITMQ_ADDRESS"`
+	}
+
+	GRPC struct {
+		URLGrpc string `json:"urlGRPC" yaml:"urlGRPC" env:"URL_GRPC"`
+	}
 )
 
 // NewConfig returns app config.
 func NewConfig() (*Config, error) {
 	cfg := &Config{}
 
-	// err := cleanenv.ReadConfig("./config/config.yml", cfg)
+	// err := cleanenv.ReadConfig(",./config/config.yml", cfg)
 	err := cleanenv.ReadConfig("./config/config.yml", cfg)
 
-	// err = cleanenv.ReadConfig("./.env", cfg)
-	// if err != nil {
-	// 	return nil, err
-	// }
 	if err != nil {
 		return nil, fmt.Errorf("config error: %w", err)
 	}

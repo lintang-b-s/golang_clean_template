@@ -39,8 +39,8 @@ func NewPostgres(cfg *config.Config) *Postgres {
 	return &Postgres{db}
 }
 
-func ClosePostgres(pg *sql.DB) {
-	_ = pg.Close()
+func ClosePostgres(pg *sql.DB) error {
+	err := pg.Close()
 	zap.L().Debug("postgres closed!")
-
+	return err 
 }

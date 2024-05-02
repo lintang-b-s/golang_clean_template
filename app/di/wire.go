@@ -8,10 +8,9 @@ import (
 	"github.com/google/wire"
 	"lintangbs.org/lintang/template/app/start"
 	"lintangbs.org/lintang/template/config"
-	"lintangbs.org/lintang/template/pkg/postgres"
 )
 
-func InitApp(cfg *config.Config, handler *gin.Engine) *postgres.Postgres {
+func InitApp(cfg *config.Config, handler *gin.Engine) *start.InitWireApp {
 	wire.Build(
 		start.InitHTTPandGRPC,
 	)

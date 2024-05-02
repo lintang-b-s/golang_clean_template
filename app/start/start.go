@@ -10,32 +10,53 @@ import (
 	"lintangbs.org/lintang/template/internal/webapi"
 	"lintangbs.org/lintang/template/monitor"
 	"lintangbs.org/lintang/template/pkg/postgres"
+	"lintangbs.org/lintang/template/pkg/rabbitmq"
+
+	grpcClient "google.golang.org/grpc"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
-func InitHTTPandGRPC(cfg *config.Config, handler *gin.Engine) *postgres.Postgres {
+type InitWireApp struct {
+	PG         *postgres.Postgres
+	RMQ        *rabbitmq.RabbitMQ
+	GRPCServer *grpcClient.Server
+}
+
+func InitHTTPandGRPC(cfg *config.Config, handler *gin.Engine) *InitWireApp {
 	// Router
 	pg := postgres.NewPostgres(cfg)
 	containerRepository := pgRepo.NewContainerRepo(pg)
 	service := monitor.NewService(containerRepository)
 	rest.NewRouter(handler, service)
+	rmq := rabbitmq.NewRabbitMQ(cfg)
 
-	address := "0.0.0.0:5099"
+	address := cfg.GRPC.URLGrpc
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		postgres.ClosePostgres(pg.Pool)
 		zap.L().Fatal("cannot start server: ", zap.Error(err))
 	}
 
 	// GRPC
+
 	prometheusAPI := webapi.NewPrometheusAPI("asdsadsaas")
 	monitorServerImpl := monitor.NewMonitorServer(prometheusAPI)
-	err = grpc.RunGRPCServer(monitorServerImpl, listener)
-	if err != nil {
-		postgres.ClosePostgres(pg.Pool)
-		zap.L().Fatal("cannot start GRPC  Server", zap.Error(err))
+
+	grpcServerChan := make(chan *grpcClient.Server)
+
+	go func() {
+		err := grpc.RunGRPCServer(monitorServerImpl, listener, grpcServerChan)
+		if err != nil {
+			zap.L().Fatal("cannot start GRPC  Server", zap.Error(err))
+		}
+	}()
+
+	var grpcServer = <-grpcServerChan
+
+	return &InitWireApp{
+		PG:         pg,
+		RMQ:        rmq,
+		GRPCServer: grpcServer,
 	}
-	return pg
 }

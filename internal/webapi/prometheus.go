@@ -2,8 +2,6 @@ package webapi
 
 import (
 	"context"
-
-	"go.uber.org/zap"
 )
 
 type BukanPromeApiClientAsli struct {
@@ -24,7 +22,6 @@ type PrometheusAPIImpl struct {
 func NewPrometheusAPI(adress string) *PrometheusAPIImpl {
 
 	promeClient := NewClient("asdsad")
-	zap.L().Info("asdsadlasddasdsdsdsdsdsdsadsd")
 
 	return &PrometheusAPIImpl{client: promeClient}
 }

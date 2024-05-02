@@ -53,6 +53,7 @@ func (s *Server) start() {
 	}()
 }
 
+
 // Notify -.
 func (s *Server) Notify() <-chan error {
 	return s.notify
