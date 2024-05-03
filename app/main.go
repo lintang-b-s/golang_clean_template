@@ -53,9 +53,6 @@ func main() {
 		"postgres": func(ctx context.Context) error {
 			return postgres.ClosePostgres(wireApp.PG.Pool)
 		},
-		"http-server": func(ctx context.Context) error {
-			return httpServer.Shutdown()
-		},
 		"rmq": func(ctx context.Context) error {
 			return wireApp.RMQ.Close()
 		},
@@ -67,15 +64,14 @@ func main() {
 
 	select {
 	case _ = <-wait:
-		fmt.Println(" Graceful Shutdown Completed Succesffully")
+		fmt.Println("")
 	case err = <-httpServer.Notify():
+
 		gracefulShutdownHttpNotify(context.Background(), 2*time.Second, map[string]operation{
 			"postgres": func(ctx context.Context) error {
 				return postgres.ClosePostgres(wireApp.PG.Pool)
 			},
-			"http-server": func(ctx context.Context) error {
-				return httpServer.Shutdown()
-			},
+
 			"rmq": func(ctx context.Context) error {
 				return wireApp.RMQ.Close()
 			},
@@ -88,6 +84,8 @@ func main() {
 		zap.L().Info(fmt.Errorf("app - Run - httpServer.Notify: %w", err).Error())
 
 	}
+
+	httpServer.Shutdown()
 }
 
 func gracefulShutdownHttpNotify(ctx context.Context, timeout time.Duration, ops map[string]operation) <-chan struct{} {
